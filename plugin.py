@@ -78,8 +78,8 @@ class BasePlugin:
 
     def onStart(self):
         WriteDebug("===onStart===")
-        self.Ident = Parameters["Mode4"]
-        self.Secret = Parameters["Mode2"]
+        self.PhoneNumber = Parameters["Mode4"]
+        self.Password = Parameters["Mode2"]
         self.Agree = Parameters["Mode5"]
         self.SystemID = ""
         self.NoOfSystems = ""
@@ -89,20 +89,20 @@ class BasePlugin:
         self.Categories = []
         self.Connections = {}
 
-        if len(self.Ident) < 10:
+        if len(self.PhoneNumber) < 10:
             Domoticz.Log("Phone Number too short")
             WriteDebug("Identifier too short")
-            self.Ident = CheckFile("Ident")
+            self.Password = CheckFile("Ident")
         else:
-            WriteFile("Ident",self.Ident)
+            WriteFile("Ident",self.PhoneNumber)
 
-        if len(self.Secret) < 4:
+        if len(self.Password) < 4:
             Domoticz.Log("Secret too short")
             WriteDebug("Secret too short")
-            self.Secret = CheckFile("Secret")
+            self.Password = CheckFile("Secret")
         else:
-            self.Secret = self.Secret.replace("+", "%2B")
-            WriteFile("Secret",self.Secret)
+            self.Password = self.Password.replace("+", "%2B")
+            WriteFile("Secret",self.Password)
 
         self.GetToken = Domoticz.Connection(Name="Get Token", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
         self.GetToken.Connect()
@@ -121,8 +121,10 @@ class BasePlugin:
             if Connection.Name == ("Get Token"):
                 WriteDebug("Get Token")
                 headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
-                data = { 'grantType': 'password' , 'username': '+46' , 'password': '' }
-                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': "{\"userName\":\"+46\",\"password\":\"!\"}"})
+#                data = { 'username': self.PhoneNumber , 'password': self.Password }
+#                data = { 'grantType': 'password' , 'username': self.PhoneNumber , 'password': self.Password }
+                Domoticz.Log(str(data))
+                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': "{\"userName\":\"+self.PhoneNumber+\",\"password\":\"+self.Password+\"}"})
 
             if Connection.Name == ("Get Data"):
                 WriteDebug("Get Data")
@@ -173,7 +175,10 @@ class BasePlugin:
                 _plugin.GetData.Disconnect()
 
     def onHeartbeat(self):
-        self.GetData.Connect()
+        self.Count += 1
+        if self.Count == 6:
+            self.GetData.Connect()
+            self.Count = 0
 
 global _plugin
 _plugin = BasePlugin()
@@ -211,8 +216,6 @@ def UpdateDevice(name, nValue, sValue):
     if name == "dynamicCircuitCurrentP3":
         ID = 13
     if name == "latestPulse":
-        Domoticz.Log(sValue)
-        sValue = str(sValue)
         ID = 14
     if name == "chargerFirmware":
         ID = 15
