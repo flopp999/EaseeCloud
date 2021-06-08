@@ -6,30 +6,14 @@
 <plugin key="EaseeCloud" name="Easee Cloud 0.1" author="flopp999" version="0.1" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
-        <h1>To use this plugin you need to agree to send data to me. I will use the data to develop the plugin so it will fit all NIBE systems</h1>
-        <h3>You can see what data I have collect by follow this link. I will onlt collect data once after startup. It will include all your parameters, your SystemID and you categories.</h3>
-        <h3>&<a href="https://rhematic-visitors.000webhostapp.com/[your systemid]">https://rhematic-visitors.000webhostapp.com/[your systemid]</a></h3>
-        <h3>Features</h3>
+        <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
+        <h3>Categories that will be fetched</h3>
         <ul style="list-style-type:square">
-            <li>..</li>
+            <li>Charger State</li>
         </ul>
-        <h3>Categories that will be fetched, if they exist</h3>
-        <ul style="list-style-type:square">
-            <li>ACTIVE_COOLING_2_PIPE</li>
-        </ul>
-        <h3>How to get your Identifier, Secret and URL?</h3>
-        <h4>&<a href="https://github.com/flopp999/NIBEUplink-Domoticz#identifier-secret-and-callback-url">https://github.com/flopp999/NIBEUplink-Domoticz#identifier-secret-and-callback-url</a></h4>
-        <h3>How to get your Access Code?</h3>
-        <h4>&<a href="https://github.com/flopp999/NIBEUplink-Domoticz#access-code">https://github.com/flopp999/NIBEUplink-Domoticz#access-code</a></h4>
         <h3>Configuration</h3>
     </description>
     <params>
-        <param field="Mode5" label="Agree to send data to developer of this plugin" width="70px" required="true">
-            <options>
-                <option label="Yes" value=True />
-                <option label="No" value=False />
-            </options>
-        </param>
         <param field="Mode4" label="Phone Number" width="320px" required="true" default="Identifier"/>
         <param field="Mode2" label="Password" width="350px" required="true" default="Secret"/>
         <param field="Mode6" label="Debug to file (Nibe.log)" width="70px">
@@ -120,28 +104,26 @@ class BasePlugin:
         if CheckInternet() == True and self.AllSettings == True:
             if Connection.Name == ("Get Token"):
                 WriteDebug("Get Token")
+                data = "{\"userName\":\""+self.PhoneNumber+"\",\"password\":\""+self.Password+"\"}"
                 headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
-#                data = { 'username': self.PhoneNumber , 'password': self.Password }
-#                data = { 'grantType': 'password' , 'username': self.PhoneNumber , 'password': self.Password }
-                Domoticz.Log(str(data))
-                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': "{\"userName\":\"+self.PhoneNumber+\",\"password\":\"+self.Password+\"}"})
+                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': data})
 
             if Connection.Name == ("Get Data"):
                 WriteDebug("Get Data")
-                headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBY2NvdW50SWQiOjk0Mjc2LCJVc2VySWQiOjc2MzE0LCJ1bmlxdWVfbmFtZSI6Ijk0Mjc2Iiwicm9sZSI6IlVzZXIiLCJuYmYiOjE2MjMwOTUwMDIsImV4cCI6MTYyMzE4MTQwMiwiaWF0IjoxNjIzMDk1MDAyfQ.yQfgoMgRzVn3czI7LxcUXKSNK83oanmeL5PGoaclEqw'}
+                headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
                 Connection.Send({'Verb':'GET', 'URL': '/api/chargers/EH29VM7Z/state', 'Headers': headers, 'Data': {} })
 
     def onMessage(self, Connection, Data):
 #        Domoticz.Log(str(Data))
         Status = int(Data["Status"])
 
-        if (Status == 200) and self.Agree == "True":
+        if (Status == 200):
 
             if Connection.Name == ("Get Token"):
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
                 self.token = Data["accessToken"]
-#                Domoticz.Log(str(Data))
+#                Domoticz.Log(str(self.token))
 
 #                with open(dir+'/EaseeCloud.ini') as jsonfile:
 #                    data = json.load(jsonfile)
