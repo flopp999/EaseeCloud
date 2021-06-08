@@ -112,7 +112,7 @@ class BasePlugin:
             if Connection.Name == ("Get Data"):
                 WriteDebug("Get Data")
                 headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
-                Connection.Send({'Verb':'GET', 'URL': '/api/chargers/EH29VM7Z/state', 'Headers': headers, 'Data': {} })
+                Connection.Send({'Verb':'GET', 'URL': '/api/chargers//state', 'Headers': headers, 'Data': {} })
 
     def onMessage(self, Connection, Data):
 #        Domoticz.Log(str(Data))
