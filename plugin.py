@@ -12,9 +12,10 @@
             <li>Charger State</li>
         </ul>
         <h3>Configuration</h3>
+        <h2>Phone Number must start with your country code e.g. +47 then your phone number without the 0</h2>
     </description>
     <params>
-        <param field="Mode4" label="Phone Number" width="320px" required="true" default="Identifier"/>
+        <param field="Mode4" label="Phone Number" width="320px" required="true" default="+46123123123"/>
         <param field="Mode2" label="Password" width="350px" required="true" default="Secret"/>
         <param field="Mode6" label="Debug to file (Nibe.log)" width="70px">
             <options>
@@ -140,7 +141,7 @@ class BasePlugin:
                 for name,value in Data.items():
 #                    Domoticz.Log(para)
 #                    Domoticz.Log(name+" "+str(value))
-                    UpdateDevice(name, 0, value)
+                    UpdateDevice(name, 0, str(value))
 
                 self.GetData.Disconnect()
 
@@ -173,113 +174,171 @@ def UpdateDevice(name, nValue, sValue):
 
     if name == "smartCharging":
         ID = 1
+        unit = ""
     if name == "cableLocked":
         ID = 2
+        unit = ""
     if name == "chargerOpMode":
         ID = 3
+        unit = ""
     if name == "totalPower":
         ID = 4
+        unit = ""
     if name == "sessionEnergy":
         ID = 5
+        unit = ""
     if name == "energyPerHour":
         ID = 6
+        unit = ""
     if name == "wiFiRSSI":
         ID = 7
+        unit = ""
     if name == "cellRSSI":
         ID = 8
+        unit = "dB"
     if name == "localRSSI":
+        unit = ""
         ID = 9
     if name == "outputPhase":
         ID = 10
+        unit = ""
     if name == "dynamicCircuitCurrentP1":
         ID = 11
+        unit = ""
     if name == "dynamicCircuitCurrentP2":
         ID = 12
+        unit = ""
     if name == "dynamicCircuitCurrentP3":
         ID = 13
+        unit = ""
     if name == "latestPulse":
         ID = 14
+        Domoticz.Log(str(sValue))
+        sValue = sValue.replace('Z', '')
+        sValue = sValue.replace('T', ' ')
+        sValue = sValue + " UTC"
+        Domoticz.Log(str(sValue))
+        unit = ""
     if name == "chargerFirmware":
         ID = 15
+        unit = ""
     if name == "latestFirmware":
         ID = 16
+        unit = ""
     if name == "voltage":
         ID = 17
+        unit = "Volt"
     if name == "chargerRAT":
         ID = 18
+        unit = ""
     if name == "lockCablePermanently":
         ID = 19
+        unit = ""
     if name == "inCurrentT2":
         ID = 20
+        unit = ""
     if name == "inCurrentT3":
         ID = 21
+        unit = ""
     if name == "inCurrentT4":
         ID = 22
+        unit = ""
     if name == "inCurrentT5":
         ID = 23
+        unit = ""
     if name == "outputCurrent":
         ID = 24
+        unit = ""
     if name == "isOnline":
         ID = 25
+        unit = ""
     if name == "inVoltageT1T2":
         ID = 26
+        unit = "Volt"
     if name == "inVoltageT1T3":
         ID = 27
+        unit = "Volt"
     if name == "inVoltageT1T4":
         ID = 28
+        unit = "Volt"
     if name == "inVoltageT1T5":
         ID = 29
+        unit = "Volt"
     if name == "inVoltageT2T3":
         ID = 30
+        unit = "Volt"
     if name == "inVoltageT2T4":
         ID = 31
+        unit = "Volt"
     if name == "inVoltageT2T5":
         ID = 32
+        unit = "Volt"
     if name == "inVoltageT3T4":
         ID = 33
+        unit = "Volt"
     if name == "inVoltageT3T5":
         ID = 34
+        unit = "Volt"
     if name == "inVoltageT4T5":
         ID = 35
+        unit = "Volt"
     if name == "ledMode":
         ID = 36
+        unit = ""
     if name == "cableRating":
         ID = 37
+        unit = ""
     if name == "dynamicChargerCurrent":
         ID = 38
+        unit = ""
     if name == "circuitTotalAllocatedPhaseConductorCurrentL1":
         ID = 39
+        unit = ""
     if name == "circuitTotalAllocatedPhaseConductorCurrentL2":
         ID = 40
+        unit = ""
     if name == "circuitTotalAllocatedPhaseConductorCurrentL3":
         ID = 41
+        unit = ""
     if name == "circuitTotalPhaseConductorCurrentL1":
         ID = 42
+        unit = ""
     if name == "circuitTotalPhaseConductorCurrentL2":
         ID = 43
+        unit = ""
     if name == "circuitTotalPhaseConductorCurrentL3":
         ID = 44
+        unit = ""
     if name == "reasonForNoCurrent":
         ID = 45
+        unit = ""
     if name == "wiFiAPEnabled":
         ID = 46
+        unit = ""
     if name == "lifetimeEnergy":
         ID = 47
+        unit = ""
     if name == "offlineMaxCircuitCurrentP1":
         ID = 48
+        unit = ""
     if name == "offlineMaxCircuitCurrentP2":
         ID = 49
+        unit = ""
     if name == "offlineMaxCircuitCurrentP3":
         ID = 50
+        unit = ""
     if name == "errorCode":
         ID = 51
+        unit = ""
     if name == "fatalErrorCode":
         ID = 52
+        unit = ""
     if name == "errors":
         ID = 53
+        unit = ""
 
     if (ID in Devices):
-        if (Devices[ID].nValue != nValue) or (Devices[ID].sValue != sValue):
+        if (Devices[ID].sValue != sValue):
             Devices[ID].Update(nValue, str(sValue))
 
     if (ID not in Devices):
@@ -287,7 +346,15 @@ def UpdateDevice(name, nValue, sValue):
             Used = 0
         else:
             Used = 1
-        Domoticz.Device(Name=name, Unit=ID, TypeName="Custom", Options={"Custom": "0;"}, Used=Used, Description="ParameterID=\nDesignation=").Create()
+        Domoticz.Log("f")
+        if ID == 14:
+            Domoticz.Device(Name=name, Unit=ID, TypeName="Text", Used=1).Create()
+
+        else:
+            Domoticz.Device(Name=name, Unit=ID, TypeName="Custom", Options={"Custom": "0;"+unit}, Used=Used, Description="ParameterID=\nDesignation=").Create()
+
+
+
 
 """        if Unit == "bar":
             Domoticz.Device(Name=Name, Unit=ID, TypeName="Pressure", Used=1, Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)+"\nSystem="+str(SystemUnitId)).Create()
