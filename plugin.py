@@ -66,6 +66,7 @@ class BasePlugin:
         self.PhoneNumber = Parameters["Mode4"]
         self.Password = Parameters["Mode2"]
         self.Agree = Parameters["Mode5"]
+        self.Charger = 0
         self.SystemID = ""
         self.NoOfSystems = ""
         self.SystemUnitId = 0
@@ -92,6 +93,7 @@ class BasePlugin:
         self.GetToken = Domoticz.Connection(Name="Get Token", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
         self.GetToken.Connect()
         self.GetData = Domoticz.Connection(Name="Get Data", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
+        self.GetCharger = Domoticz.Connection(Name="Get Charger", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
 
     def onDisconnect(self, Connection):
         WriteDebug("onDisconnect called for connection '"+Connection.Name+"'.")
@@ -109,10 +111,17 @@ class BasePlugin:
                 headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
                 Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': data})
 
+            if Connection.Name == ("Get Charger"):
+                WriteDebug("Get Data")
+                headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
+#                Connection.Send({'Verb':'GET', 'URL': '/api/chargers/EH29VM7Z/state', 'Headers': headers, 'Data': {} })
+                Connection.Send({'Verb':'GET', 'URL': '/api/chargers', 'Headers': headers, 'Data': {} })
+
             if Connection.Name == ("Get Data"):
                 WriteDebug("Get Data")
                 headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
-                Connection.Send({'Verb':'GET', 'URL': '/api/chargers/EH29VM7Z/state', 'Headers': headers, 'Data': {} })
+#                Connection.Send({'Verb':'GET', 'URL': '/api/chargers/EH29VM7Z/state', 'Headers': headers, 'Data': {} })
+                Connection.Send({'Verb':'GET', 'URL': '/api/chargers/'+self.Charger+'/state', 'Headers': headers, 'Data': {} })
 
     def onMessage(self, Connection, Data):
 #        Domoticz.Log(str(Data))
@@ -132,6 +141,18 @@ class BasePlugin:
 #                with open(dir+'/EaseeCloud.ini', 'w') as outfile:
 #                    json.dump(data, outfile, indent=4)
                 self.GetToken.Disconnect()
+                self.GetCharger.Connect()
+
+            if Connection.Name == ("Get Charger"):
+                Data = Data['Data'].decode('UTF-8')
+                Data = json.loads(Data)
+#                Domoticz.Log(str(Data))
+#                for ID in Data:
+#                    Domoticz.Log(str(ID["id"]))
+                self.Charger = Data[0]["id"]
+#                Domoticz.Log(str(self.Charger))
+#                    UpdateDevice(name, 0, str(value))
+                self.GetCharger.Disconnect()
                 self.GetData.Connect()
 
             if Connection.Name == ("Get Data"):
@@ -213,11 +234,9 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     if name == "latestPulse":
         ID = 14
-        Domoticz.Log(str(sValue))
         sValue = sValue.replace('Z', '')
         sValue = sValue.replace('T', ' ')
         sValue = sValue + " UTC"
-        Domoticz.Log(str(sValue))
         unit = ""
     if name == "chargerFirmware":
         ID = 15
