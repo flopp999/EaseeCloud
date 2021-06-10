@@ -3,13 +3,14 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.1" author="flopp999" version="0.1" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.2" author="flopp999" version="0.2" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
         <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
         <h3>Categories that will be fetched</h3>
         <ul style="list-style-type:square">
             <li>Charger State</li>
+            <li>Charger Config</li>
         </ul>
         <h3>Configuration</h3>
         <h2>Phone Number must start with your country code e.g. +47 then your phone number without the 0</h2>
@@ -17,7 +18,7 @@
     <params>
         <param field="Mode4" label="Phone Number" width="320px" required="true" default="+46123123123"/>
         <param field="Mode2" label="Password" width="350px" required="true" default="Secret"/>
-        <param field="Mode6" label="Debug to file (Nibe.log)" width="70px">
+        <param field="Mode6" label="Debug to file (Easee.log)" width="70px">
             <options>
                 <option label="Yes" value="Yes" />
                 <option label="No" value="No" />
@@ -67,44 +68,29 @@ class BasePlugin:
         self.Password = Parameters["Mode2"]
         self.Agree = Parameters["Mode5"]
         self.Charger = 0
-        self.SystemID = ""
         self.NoOfSystems = ""
-        self.SystemUnitId = 0
         self.FirstRun = True
-        self.AllSettings = True
-        self.Categories = []
-        self.Connections = {}
 
         if len(self.PhoneNumber) < 10:
             Domoticz.Log("Phone Number too short")
             WriteDebug("Identifier too short")
-            self.Password = CheckFile("Ident")
-        else:
-            WriteFile("Ident",self.PhoneNumber)
 
         if len(self.Password) < 4:
-            Domoticz.Log("Secret too short")
-            WriteDebug("Secret too short")
-            self.Password = CheckFile("Secret")
-        else:
-            self.Password = self.Password.replace("+", "%2B")
-            WriteFile("Secret",self.Password)
+            Domoticz.Log("Password too short")
+            WriteDebug("Password too short")
 
         self.GetToken = Domoticz.Connection(Name="Get Token", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
-        self.GetToken.Connect()
-        self.GetData = Domoticz.Connection(Name="Get Data", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
+        self.GetState = Domoticz.Connection(Name="Get State", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
         self.GetCharger = Domoticz.Connection(Name="Get Charger", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
+        self.GetConfig = Domoticz.Connection(Name="Get Config", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
+        self.GetToken.Connect()
 
     def onDisconnect(self, Connection):
         WriteDebug("onDisconnect called for connection '"+Connection.Name+"'.")
-        for x in self.Connections:
-            if Connection.Name in self.Connections:
-#                if Connection.Connected() == False
-                self.Connections[Connection.Name] = Connection.Connected()
 
     def onConnect(self, Connection, Status, Description):
         WriteDebug("onConnect")
-        if CheckInternet() == True and self.AllSettings == True:
+        if CheckInternet() == True:
             if Connection.Name == ("Get Token"):
                 WriteDebug("Get Token")
                 data = "{\"userName\":\""+self.PhoneNumber+"\",\"password\":\""+self.Password+"\"}"
@@ -112,15 +98,19 @@ class BasePlugin:
                 Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': data})
 
             if Connection.Name == ("Get Charger"):
-                WriteDebug("Get Data")
+                WriteDebug("Get Charger")
                 headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
-#                Connection.Send({'Verb':'GET', 'URL': '/api/chargers/EH29VM7Z/state', 'Headers': headers, 'Data': {} })
                 Connection.Send({'Verb':'GET', 'URL': '/api/chargers', 'Headers': headers, 'Data': {} })
 
-            if Connection.Name == ("Get Data"):
-                WriteDebug("Get Data")
+            if Connection.Name == ("Get State"):
+                WriteDebug("Get State")
                 headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
                 Connection.Send({'Verb':'GET', 'URL': '/api/chargers/'+self.Charger+'/state', 'Headers': headers, 'Data': {} })
+
+            if Connection.Name == ("Get Config"):
+                WriteDebug("Get Config")
+                headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
+                Connection.Send({'Verb':'GET', 'URL': '/api/chargers/'+self.Charger+'/config', 'Headers': headers, 'Data': {} })
 
     def onMessage(self, Connection, Data):
 #        Domoticz.Log(str(Data))
@@ -133,12 +123,6 @@ class BasePlugin:
                 Data = json.loads(Data)
                 self.token = Data["accessToken"]
 #                Domoticz.Log(str(self.token))
-
-#                with open(dir+'/EaseeCloud.ini') as jsonfile:
-#                    data = json.load(jsonfile)
-#                data["Config"][0]["Access"] = Data["accessToken"]
-#                with open(dir+'/EaseeCloud.ini', 'w') as outfile:
-#                    json.dump(data, outfile, indent=4)
                 self.GetToken.Disconnect()
                 self.GetCharger.Connect()
 
@@ -146,24 +130,29 @@ class BasePlugin:
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
 #                Domoticz.Log(str(Data))
-#                for ID in Data:
-#                    Domoticz.Log(str(ID["id"]))
                 self.Charger = Data[0]["id"]
-#                Domoticz.Log(str(self.Charger))
+#                Domoticz.Log("Ch)
 #                    UpdateDevice(name, 0, str(value))
                 self.GetCharger.Disconnect()
-                self.GetData.Connect()
+                self.GetState.Connect()
 
-            if Connection.Name == ("Get Data"):
+            if Connection.Name == ("Get State"):
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
-#                Domoticz.Log(str(Data))
+                Domoticz.Log("State updated")
                 for name,value in Data.items():
-#                    Domoticz.Log(para)
-#                    Domoticz.Log(name+" "+str(value))
+                    UpdateDevice(name, 0, str(value))
+                self.GetState.Disconnect()
+                self.GetConfig.Connect()
+
+            if Connection.Name == ("Get Config"):
+                Data = Data['Data'].decode('UTF-8')
+                Data = json.loads(Data)
+                Domoticz.Log("Config updated")
+                for name,value in Data.items():
                     UpdateDevice(name, 0, str(value))
 
-                self.GetData.Disconnect()
+                self.GetConfig.Disconnect()
 
 
         elif self.Agree == "False":
@@ -174,13 +163,13 @@ class BasePlugin:
             Domoticz.Error(str(Data))
             if _plugin.GetToken.Connected():
                 _plugin.GetToken.Disconnect()
-            if _plugin.GetData.Connected():
-                _plugin.GetData.Disconnect()
+            if _plugin.GetState.Connected():
+                _plugin.GetState.Disconnect()
 
     def onHeartbeat(self):
         self.Count += 1
-        if self.Count == 6:
-            self.GetData.Connect()
+        if self.Count == 12:
+            self.GetToken.Connect()
             self.Count = 0
 
 global _plugin
@@ -354,6 +343,81 @@ def UpdateDevice(name, nValue, sValue):
     if name == "errors":
         ID = 53
         unit = ""
+    if name == "isEnabled":
+        ID = 54
+        unit = ""
+    if name == "lockCablePermanently":
+        ID = 55
+        unit = ""
+    if name == "authorizationRequired":
+        ID = 56
+        unit = ""
+    if name == "remoteStartRequired":
+        ID = 57
+        unit = ""
+    if name == "smartButtonEnabled":
+        ID = 58
+        unit = ""
+    if name == "wiFiSSID":
+        ID = 59
+        unit = ""
+    if name == "detectedPowerGridType":
+        ID = 60
+        unit = ""
+    if name == "offlineChargingMode":
+        ID = 61
+        unit = ""
+    if name == "circuitMaxCurrentP1":
+        ID = 62
+        unit = ""
+    if name == "circuitMaxCurrentP2":
+        ID = 63
+        unit = ""
+    if name == "circuitMaxCurrentP3":
+        ID = 64
+        unit = ""
+    if name == "enableIdleCurrent":
+        ID = 65
+        unit = ""
+    if name == "limitToSinglePhaseCharging":
+        ID = 66
+        unit = ""
+    if name == "phaseMode":
+        ID = 67
+        unit = ""
+    if name == "localNodeType":
+        ID = 68
+        unit = ""
+    if name == "localAuthorizationRequired":
+        ID = 69
+        unit = ""
+    if name == "localRadioChannel":
+        ID = 70
+        unit = ""
+    if name == "localShortAddress":
+        ID = 71
+        unit = ""
+    if name == "localParentAddrOrNumOfNodes":
+        ID = 72
+        unit = ""
+    if name == "localPreAuthorizeEnabled":
+        ID = 73
+        unit = ""
+    if name == "localAuthorizeOfflineEnabled":
+        ID = 74
+        unit = ""
+    if name == "allowOfflineTxForUnknownId":
+        ID = 75
+        unit = ""
+    if name == "maxChargerCurrent":
+        ID = 76
+        unit = ""
+    if name == "ledStripBrightness":
+        ID = 77
+        unit = ""
+    if name == "chargingSchedule":
+        ID = 78
+        unit = ""
 
     if (ID in Devices):
         if (Devices[ID].sValue != sValue):
@@ -364,91 +428,12 @@ def UpdateDevice(name, nValue, sValue):
             Used = 0
         else:
             Used = 1
-        Domoticz.Log("f")
         if ID == 14:
             Domoticz.Device(Name=name, Unit=ID, TypeName="Text", Used=1).Create()
 
         else:
             Domoticz.Device(Name=name, Unit=ID, TypeName="Custom", Options={"Custom": "0;"+unit}, Used=Used, Description="ParameterID=\nDesignation=").Create()
 
-
-
-
-"""        if Unit == "bar":
-            Domoticz.Device(Name=Name, Unit=ID, TypeName="Pressure", Used=1, Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)+"\nSystem="+str(SystemUnitId)).Create()
-        if Unit == "l/m":
-            Domoticz.Device(Name=Name, Unit=ID, TypeName="Waterflow", Used=1, Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)+"\nSystem="+str(SystemUnitId)).Create()
-        elif Unit == "°C" or ID == 30 and ID !=24:
-            Domoticz.Device(Name=Name, Unit=ID, TypeName="Temperature", Used=Used, Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)+"\nSystem="+str(SystemUnitId)).Create()
-        elif Unit == "A":
-            if ID == 15:
-                Domoticz.Device(Name=Name+" 1", Unit=ID, TypeName="Custom", Used=1, Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)+"\nSystem="+str(SystemUnitId)).Create()
-            if ID == 16:
-                Domoticz.Device(Name=Name+" 2", Unit=ID, TypeName="Custom", Used=1, Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)+"\nSystem="+str(SystemUnitId)).Create()
-            if ID == 17:
-                Domoticz.Device(Name=Name+" 3", Unit=ID, TypeName="Custom", Used=1, Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)+"\nSystem="+str(SystemUnitId)).Create()
-            if ID == 53:
-                Domoticz.Device(Name=Name, Unit=ID, TypeName="Current (Single)", Used=1, Description="ParameterID="+str(PID)+"\nSystem="+str(SystemUnitId)).Create()
-        elif Name == "compressor starts":
-            Domoticz.Device(Name=Name, Unit=ID, TypeName="Custom", Options={"Custom": "0;times"}, Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)).Create()
-        elif Name == "blocked":
-            if ID == 21:
-                Domoticz.Device(Name="compressor "+Name, Unit=ID, TypeName="Custom", Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)).Create()
-            if ID == 51:
-                Domoticz.Device(Name="addition "+Name, Unit=ID, TypeName="Custom", Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)).Create()
-        elif ID == 24:
-            Domoticz.Device(Name="compressor "+Name, Unit=ID, TypeName="Temperature", Used=1, Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)).Create()
-        elif ID == 41 or ID == 81:
-            Domoticz.Device(Name=Name, Unit=ID, TypeName="Custom", Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)+"\nDesignation="+str(Design)).Create()
-        elif ID == 61:
-            Domoticz.Device(Name="comfort mode "+Name, Unit=ID, TypeName="Custom", Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)).Create()
-        elif ID == 62:
-            Domoticz.Device(Name="comfort mode "+Name, Unit=ID, TypeName="Custom", Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)).Create()
-        elif ID == 63:
-            Domoticz.Device(Name="smart price adaption "+Name, Unit=ID, TypeName="Custom", Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)).Create()
-        elif ID == 71:
-            Domoticz.Device(Name=Name, Unit=ID, TypeName="Text", Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)).Create()
-        elif ID == 72 or ID == 73:
-            Domoticz.Device(Name=Name, Unit=ID, TypeName="Text", Used=1, Image=(_plugin.ImageID)).Create()
-        elif ID == 74:
-            Domoticz.Device(Name="software "+Name, Unit=ID, TypeName="Text", Used=1, Image=(_plugin.ImageID)).Create()
-        else:
-            if Design == "":
-                Domoticz.Device(Name=Name, Unit=ID, TypeName="Custom", Options={"Custom": "0;"+Unit}, Used=1, Image=(_plugin.ImageID), Description="ParameterID="+str(PID)).Create()
-"""
-
-def CreateFile():
-    if not os.path.isfile(dir+'/EaseeCloud.ini'):
-        data = {}
-        data["Config"] = []
-        data["Config"].append({
-             "Access": "",
-             "Ident": "",
-             "Refresh": "",
-             "Secret": "",
-             "SystemID": "",
-             "URL": ""
-             })
-        with open(dir+'/EaseeCloud.ini', 'w') as outfile:
-            json.dump(data, outfile, indent=4)
-
-def CheckFile(Parameter):
-    if os.path.isfile(dir+'/EaseeCloud.ini'):
-        with open(dir+'/EaseeCloud.ini') as jsonfile:
-            data = json.load(jsonfile)
-            data = data["Config"][0][Parameter]
-            if data == "":
-                _plugin.AllSettings = False
-            else:
-                return data
-
-def WriteFile(Parameter,text):
-    CreateFile()
-    with open(dir+'/EaseeCloud.ini') as jsonfile:
-        data = json.load(jsonfile)
-    data["Config"][0][Parameter] = text
-    with open(dir+'/EaseeCloud.ini', 'w') as outfile:
-        json.dump(data, outfile, indent=4)
 
 def CheckInternet():
     WriteDebug("Entered CheckInternet")
@@ -460,10 +445,10 @@ def CheckInternet():
     except:
         if _plugin.GetToken.Connected():
             _plugin.GetToken.Disconnect()
-        if _plugin.GetData.Connected():
-            _plugin.GetData.Disconnect()
-
-
+        if _plugin.GetState.Connected():
+            _plugin.GetState.Disconnect()
+        if _plugin.GetConfig.Connected():
+            _plugin.GetConfig.Disconnect()
         WriteDebug("Internet is not available")
         return False
 
