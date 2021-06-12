@@ -13,6 +13,7 @@
             <li>Charger Config</li>
         </ul>
         <h3>Configuration</h3>
+        <h2>Use same phone number and password as you do for https://easee.cloud/auth/signin</h2>
         <h2>Phone Number must start with your country code e.g. +47 then your phone number without the 0</h2>
     </description>
     <params>
@@ -129,9 +130,6 @@ class BasePlugin:
                 Data = json.loads(Data)
                 self.token = Data["accessToken"]
                 self.refreshtoken = Data["refreshToken"]
-#                self.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBY2NvdW50SWQiOjk0Mjc2LCJVc2VySWQiOjc2MzE0LCJ1bmlxdWVfbmFtZSI6Ijk0Mjc2Iiwicm9sZSI6IlVzZXIiLCJuYmYiOjE2MjMwOTUwMDIsImV4cCI6MTYyMzE4MTQwMiwiaWF0IjoxNjIzMDk1MDAyfQ.yQfgoMgRzVn3czI7LxcUXKSNK83oanmeL5PGoaclEqw"
-#                Domoticz.Log(str(Data["refreshToken"]))
-#                Domoticz.Log(str(self.token))
                 self.GetToken.Disconnect()
                 self.GetCharger.Connect()
 
@@ -140,18 +138,12 @@ class BasePlugin:
                 Data = json.loads(Data)
                 self.token = Data["accessToken"]
                 self.refreshtoken = Data["refreshToken"]
-#                self.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBY2NvdW50SWQiOjk0Mjc2LCJVc2VySWQiOjc2MzE0LCJ1bmlxdWVfbmFtZSI6Ijk0Mjc2Iiwicm9sZSI6IlVzZXIiLCJuYmYiOjE2MjMwOTUwMDIsImV4cCI6MTYyMzE4MTQwMiwiaWF0IjoxNjIzMDk1MDAyfQ.yQfgoMgRzVn3czI7LxcUXKSNK83oanmeL5PGoaclEqw"
-#                Domoticz.Log(str(Data["refreshToken"]))
-#                Domoticz.Log(str(self.token))
                 self.GetState.Connect()
 
             if Connection.Name == ("Get Charger"):
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
-#                Domoticz.Log(str(Data))
                 self.Charger = Data[0]["id"]
-#                Domoticz.Log("Ch)
-#                    UpdateDevice(name, 0, str(value))
                 self.GetCharger.Disconnect()
                 self.GetState.Connect()
 
