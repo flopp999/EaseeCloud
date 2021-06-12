@@ -80,6 +80,7 @@ class BasePlugin:
             WriteDebug("Password too short")
 
         self.GetToken = Domoticz.Connection(Name="Get Token", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
+        self.GetRefreshToken = Domoticz.Connection(Name="Get Refrsh Token", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
         self.GetState = Domoticz.Connection(Name="Get State", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
         self.GetCharger = Domoticz.Connection(Name="Get Charger", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
         self.GetConfig = Domoticz.Connection(Name="Get Config", Transport="TCP/IP", Protocol="HTTPS", Address="api.easee.cloud", Port="443")
@@ -97,6 +98,12 @@ class BasePlugin:
                 headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
                 Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': data})
 
+            if Connection.Name == ("Get Refresh Token"):
+                WriteDebug("Get Refresh Token")
+                data = "{\"accessToken\":\""+self.Token+"\",\"refreshToken\":\""+self.RefreshToken+"\"}"
+                headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
+                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/refresh_token', 'Headers': headers, 'Data': data})
+
             if Connection.Name == ("Get Charger"):
                 WriteDebug("Get Charger")
                 headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
@@ -113,18 +120,30 @@ class BasePlugin:
                 Connection.Send({'Verb':'GET', 'URL': '/api/chargers/'+self.Charger+'/config', 'Headers': headers, 'Data': {} })
 
     def onMessage(self, Connection, Data):
-#        Domoticz.Log(str(Data))
         Status = int(Data["Status"])
 
-        if (Status == 200):
+        if Status == 200:
 
             if Connection.Name == ("Get Token"):
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
                 self.token = Data["accessToken"]
+                self.refreshtoken = Data["refreshToken"]
+#                self.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBY2NvdW50SWQiOjk0Mjc2LCJVc2VySWQiOjc2MzE0LCJ1bmlxdWVfbmFtZSI6Ijk0Mjc2Iiwicm9sZSI6IlVzZXIiLCJuYmYiOjE2MjMwOTUwMDIsImV4cCI6MTYyMzE4MTQwMiwiaWF0IjoxNjIzMDk1MDAyfQ.yQfgoMgRzVn3czI7LxcUXKSNK83oanmeL5PGoaclEqw"
+#                Domoticz.Log(str(Data["refreshToken"]))
 #                Domoticz.Log(str(self.token))
                 self.GetToken.Disconnect()
                 self.GetCharger.Connect()
+
+            if Connection.Name == ("Get Refresh Token"):
+                Data = Data['Data'].decode('UTF-8')
+                Data = json.loads(Data)
+                self.token = Data["accessToken"]
+                self.refreshtoken = Data["refreshToken"]
+#                self.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBY2NvdW50SWQiOjk0Mjc2LCJVc2VySWQiOjc2MzE0LCJ1bmlxdWVfbmFtZSI6Ijk0Mjc2Iiwicm9sZSI6IlVzZXIiLCJuYmYiOjE2MjMwOTUwMDIsImV4cCI6MTYyMzE4MTQwMiwiaWF0IjoxNjIzMDk1MDAyfQ.yQfgoMgRzVn3czI7LxcUXKSNK83oanmeL5PGoaclEqw"
+#                Domoticz.Log(str(Data["refreshToken"]))
+#                Domoticz.Log(str(self.token))
+                self.GetState.Connect()
 
             if Connection.Name == ("Get Charger"):
                 Data = Data['Data'].decode('UTF-8')
@@ -151,8 +170,14 @@ class BasePlugin:
                 Domoticz.Log("Config updated")
                 for name,value in Data.items():
                     UpdateDevice(name, 0, str(value))
-
                 self.GetConfig.Disconnect()
+
+        elif Status == 401:
+            Data = Data['Data'].decode('UTF-8')
+            Data = json.loads(Data)
+            Domoticz.Log(str(Data))
+            self.GetRefreshToken.Connect()
+
 
 
         elif self.Agree == "False":
@@ -169,7 +194,7 @@ class BasePlugin:
     def onHeartbeat(self):
         self.Count += 1
         if self.Count == 12:
-            self.GetToken.Connect()
+            self.GetState.Connect()
             self.Count = 0
 
 global _plugin
