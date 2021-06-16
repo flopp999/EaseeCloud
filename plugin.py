@@ -3,10 +3,12 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.25" author="flopp999" version="0.25" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.26" author="flopp999" version="0.26" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
         <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
+        <h2>https://developer.easee.cloud/docs/get-started</h2>
+        <h2>https://developer.easee.cloud/reference</h2>
         <h3>Categories that will be fetched</h3>
         <ul style="list-style-type:square">
             <li>Charger State</li>
@@ -165,15 +167,11 @@ class BasePlugin:
                 self.GetConfig.Disconnect()
 
         elif Status == 401:
-            Data = Data['Data'].decode('UTF-8')
-            Data = json.loads(Data)
+#            Data = Data.decode('UTF-8')
+#            Data = json.loads(Data)
             Domoticz.Log(str(Data))
             self.GetRefreshToken.Connect()
 
-
-
-        elif self.Agree == "False":
-            Domoticz.Log("You must agree")
         else:
             WriteDebug("Status = "+str(Status))
             Domoticz.Error(str("Status "+str(Status)))
