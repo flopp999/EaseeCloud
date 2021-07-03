@@ -184,7 +184,7 @@ class BasePlugin:
     def onHeartbeat(self):
         self.Count += 1
         if self.Count == 12:
-            self.GetState.Connect()
+            self.GetToken.Connect()
             self.Count = 0
 
 global _plugin
