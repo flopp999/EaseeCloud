@@ -3,7 +3,7 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.26" author="flopp999" version="0.26" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.27" author="flopp999" version="0.27" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
         <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
@@ -101,23 +101,23 @@ class BasePlugin:
                 headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
                 Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': data})
 
-            if Connection.Name == ("Get Refresh Token"):
+            elif Connection.Name == ("Get Refresh Token"):
                 WriteDebug("Get Refresh Token")
                 data = "{\"accessToken\":\""+self.Token+"\",\"refreshToken\":\""+self.RefreshToken+"\"}"
                 headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
                 Connection.Send({'Verb':'POST', 'URL': '/api/accounts/refresh_token', 'Headers': headers, 'Data': data})
 
-            if Connection.Name == ("Get Charger"):
+            elif Connection.Name == ("Get Charger"):
                 WriteDebug("Get Charger")
                 headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
                 Connection.Send({'Verb':'GET', 'URL': '/api/chargers', 'Headers': headers, 'Data': {} })
 
-            if Connection.Name == ("Get State"):
+            elif Connection.Name == ("Get State"):
                 WriteDebug("Get State")
                 headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
                 Connection.Send({'Verb':'GET', 'URL': '/api/chargers/'+self.Charger+'/state', 'Headers': headers, 'Data': {} })
 
-            if Connection.Name == ("Get Config"):
+            elif Connection.Name == ("Get Config"):
                 WriteDebug("Get Config")
                 headers = { 'Host': 'api.easee.cloud', 'Authorization': 'Bearer '+self.token}
                 Connection.Send({'Verb':'GET', 'URL': '/api/chargers/'+self.Charger+'/config', 'Headers': headers, 'Data': {} })
@@ -135,41 +135,38 @@ class BasePlugin:
                 self.GetToken.Disconnect()
                 self.GetCharger.Connect()
 
-            if Connection.Name == ("Get Refresh Token"):
+            elif Connection.Name == ("Get Refresh Token"):
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
                 self.token = Data["accessToken"]
                 self.refreshtoken = Data["refreshToken"]
                 self.GetState.Connect()
 
-            if Connection.Name == ("Get Charger"):
+            elif Connection.Name == ("Get Charger"):
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
                 self.Charger = Data[0]["id"]
                 self.GetCharger.Disconnect()
                 self.GetState.Connect()
 
-            if Connection.Name == ("Get State"):
+            elif Connection.Name == ("Get State"):
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
-                Domoticz.Log("State updated")
                 for name,value in Data.items():
                     UpdateDevice(name, 0, str(value))
+                Domoticz.Log("State updated")
                 self.GetState.Disconnect()
                 self.GetConfig.Connect()
 
-            if Connection.Name == ("Get Config"):
+            elif Connection.Name == ("Get Config"):
                 Data = Data['Data'].decode('UTF-8')
                 Data = json.loads(Data)
-                Domoticz.Log("Config updated")
                 for name,value in Data.items():
                     UpdateDevice(name, 0, str(value))
+                Domoticz.Log("Config updated")
                 self.GetConfig.Disconnect()
 
         elif Status == 401:
-#            Data = Data.decode('UTF-8')
-#            Data = json.loads(Data)
-            Domoticz.Log(str(Data))
             self.GetRefreshToken.Connect()
 
         else:
@@ -199,240 +196,259 @@ def UpdateDevice(name, nValue, sValue):
     if name == "smartCharging":
         ID = 1
         unit = ""
-    if name == "cableLocked":
+    elif name == "cableLocked":
         ID = 2
         unit = ""
-    if name == "chargerOpMode":
+    elif name == "chargerOpMode":
         ID = 3
         unit = ""
-    if name == "totalPower":
+    elif name == "totalPower":
         ID = 4
         unit = ""
-    if name == "sessionEnergy":
+    elif name == "sessionEnergy":
         ID = 5
-        unit = ""
-    if name == "energyPerHour":
+        unit = "kWh"
+    elif name == "energyPerHour":
         ID = 6
         unit = ""
-    if name == "wiFiRSSI":
+    elif name == "wiFiRSSI":
         ID = 7
-        unit = ""
-    if name == "cellRSSI":
+        unit = "dBm"
+    elif name == "cellRSSI":
         ID = 8
-        unit = "dB"
-    if name == "localRSSI":
+        unit = "dBm"
+    elif name == "localRSSI":
         unit = ""
         ID = 9
-    if name == "outputPhase":
+    elif name == "outputPhase":
         ID = 10
         unit = ""
-    if name == "dynamicCircuitCurrentP1":
+    elif name == "dynamicCircuitCurrentP1":
         ID = 11
         unit = ""
-    if name == "dynamicCircuitCurrentP2":
+    elif name == "dynamicCircuitCurrentP2":
         ID = 12
         unit = ""
-    if name == "dynamicCircuitCurrentP3":
+    elif name == "dynamicCircuitCurrentP3":
         ID = 13
         unit = ""
-    if name == "latestPulse":
+    elif name == "latestPulse":
         ID = 14
         sValue = sValue.replace('Z', '')
         sValue = sValue.replace('T', ' ')
         sValue = sValue + " UTC"
         unit = ""
-    if name == "chargerFirmware":
+    elif name == "chargerFirmware":
         ID = 15
         unit = ""
-    if name == "latestFirmware":
+    elif name == "latestFirmware":
         ID = 16
         unit = ""
-    if name == "voltage":
+    elif name == "voltage":
         ID = 17
         unit = "Volt"
-    if name == "chargerRAT":
+    elif name == "chargerRAT":
         ID = 18
         unit = ""
-    if name == "lockCablePermanently":
+    elif name == "lockCablePermanently":
         ID = 19
         unit = ""
-    if name == "inCurrentT2":
+    elif name == "inCurrentT2":
         ID = 20
         unit = ""
-    if name == "inCurrentT3":
+    elif name == "inCurrentT3":
         ID = 21
         unit = ""
-    if name == "inCurrentT4":
+    elif name == "inCurrentT4":
         ID = 22
         unit = ""
-    if name == "inCurrentT5":
+    elif name == "inCurrentT5":
         ID = 23
         unit = ""
-    if name == "outputCurrent":
+    elif name == "outputCurrent":
         ID = 24
         unit = ""
-    if name == "isOnline":
+    elif name == "isOnline":
         ID = 25
         unit = ""
-    if name == "inVoltageT1T2":
+    elif name == "inVoltageT1T2":
         ID = 26
         unit = "Volt"
-    if name == "inVoltageT1T3":
+    elif name == "inVoltageT1T3":
         ID = 27
         unit = "Volt"
-    if name == "inVoltageT1T4":
+    elif name == "inVoltageT1T4":
         ID = 28
         unit = "Volt"
-    if name == "inVoltageT1T5":
+    elif name == "inVoltageT1T5":
         ID = 29
         unit = "Volt"
-    if name == "inVoltageT2T3":
+    elif name == "inVoltageT2T3":
         ID = 30
         unit = "Volt"
-    if name == "inVoltageT2T4":
+    elif name == "inVoltageT2T4":
         ID = 31
         unit = "Volt"
-    if name == "inVoltageT2T5":
+    elif name == "inVoltageT2T5":
         ID = 32
         unit = "Volt"
-    if name == "inVoltageT3T4":
+    elif name == "inVoltageT3T4":
         ID = 33
         unit = "Volt"
-    if name == "inVoltageT3T5":
+    elif name == "inVoltageT3T5":
         ID = 34
         unit = "Volt"
-    if name == "inVoltageT4T5":
+    elif name == "inVoltageT4T5":
         ID = 35
         unit = "Volt"
-    if name == "ledMode":
+    elif name == "ledMode":
         ID = 36
         unit = ""
-    if name == "cableRating":
+    elif name == "cableRating":
         ID = 37
         unit = ""
-    if name == "dynamicChargerCurrent":
+    elif name == "dynamicChargerCurrent":
         ID = 38
         unit = ""
-    if name == "circuitTotalAllocatedPhaseConductorCurrentL1":
+    elif name == "circuitTotalAllocatedPhaseConductorCurrentL1":
         ID = 39
         unit = ""
-    if name == "circuitTotalAllocatedPhaseConductorCurrentL2":
+    elif name == "circuitTotalAllocatedPhaseConductorCurrentL2":
         ID = 40
         unit = ""
-    if name == "circuitTotalAllocatedPhaseConductorCurrentL3":
+    elif name == "circuitTotalAllocatedPhaseConductorCurrentL3":
         ID = 41
         unit = ""
-    if name == "circuitTotalPhaseConductorCurrentL1":
+    elif name == "circuitTotalPhaseConductorCurrentL1":
         ID = 42
-        unit = ""
-    if name == "circuitTotalPhaseConductorCurrentL2":
+        unit = "A"
+    elif name == "circuitTotalPhaseConductorCurrentL2":
         ID = 43
-        unit = ""
-    if name == "circuitTotalPhaseConductorCurrentL3":
+        unit = "A"
+    elif name == "circuitTotalPhaseConductorCurrentL3":
         ID = 44
-        unit = ""
-    if name == "reasonForNoCurrent":
+        unit = "A"
+    elif name == "reasonForNoCurrent":
         ID = 45
         unit = ""
-    if name == "wiFiAPEnabled":
+    elif name == "wiFiAPEnabled":
         ID = 46
         unit = ""
-    if name == "lifetimeEnergy":
+    elif name == "lifetimeEnergy":
         ID = 47
-        unit = ""
-    if name == "offlineMaxCircuitCurrentP1":
+        unit = "kWh"
+    elif name == "offlineMaxCircuitCurrentP1":
         ID = 48
         unit = ""
-    if name == "offlineMaxCircuitCurrentP2":
+    elif name == "offlineMaxCircuitCurrentP2":
         ID = 49
         unit = ""
-    if name == "offlineMaxCircuitCurrentP3":
+    elif name == "offlineMaxCircuitCurrentP3":
         ID = 50
         unit = ""
-    if name == "errorCode":
+    elif name == "errorCode":
         ID = 51
         unit = ""
-    if name == "fatalErrorCode":
+    elif name == "fatalErrorCode":
         ID = 52
         unit = ""
-    if name == "errors":
+    elif name == "errors":
         ID = 53
         unit = ""
-    if name == "isEnabled":
+    elif name == "isEnabled":
         ID = 54
         unit = ""
-    if name == "lockCablePermanently":
+    elif name == "lockCablePermanently":
         ID = 55
         unit = ""
-    if name == "authorizationRequired":
+    elif name == "authorizationRequired":
         ID = 56
         unit = ""
-    if name == "remoteStartRequired":
+    elif name == "remoteStartRequired":
         ID = 57
         unit = ""
-    if name == "smartButtonEnabled":
+    elif name == "smartButtonEnabled":
         ID = 58
         unit = ""
-    if name == "wiFiSSID":
+    elif name == "wiFiSSID":
         ID = 59
         unit = ""
-    if name == "detectedPowerGridType":
+    elif name == "detectedPowerGridType":
         ID = 60
         unit = ""
-    if name == "offlineChargingMode":
+    elif name == "offlineChargingMode":
         ID = 61
         unit = ""
-    if name == "circuitMaxCurrentP1":
+    elif name == "circuitMaxCurrentP1":
         ID = 62
         unit = ""
-    if name == "circuitMaxCurrentP2":
+    elif name == "circuitMaxCurrentP2":
         ID = 63
         unit = ""
-    if name == "circuitMaxCurrentP3":
+    elif name == "circuitMaxCurrentP3":
         ID = 64
         unit = ""
-    if name == "enableIdleCurrent":
+    elif name == "enableIdleCurrent":
         ID = 65
         unit = ""
-    if name == "limitToSinglePhaseCharging":
+    elif name == "limitToSinglePhaseCharging":
         ID = 66
         unit = ""
-    if name == "phaseMode":
+    elif name == "phaseMode":
         ID = 67
         unit = ""
-    if name == "localNodeType":
+    elif name == "localNodeType":
         ID = 68
         unit = ""
-    if name == "localAuthorizationRequired":
+    elif name == "localAuthorizationRequired":
         ID = 69
         unit = ""
-    if name == "localRadioChannel":
+    elif name == "localRadioChannel":
         ID = 70
         unit = ""
-    if name == "localShortAddress":
+    elif name == "localShortAddress":
         ID = 71
         unit = ""
-    if name == "localParentAddrOrNumOfNodes":
+    elif name == "localParentAddrOrNumOfNodes":
         ID = 72
         unit = ""
-    if name == "localPreAuthorizeEnabled":
+    elif name == "localPreAuthorizeEnabled":
         ID = 73
         unit = ""
-    if name == "localAuthorizeOfflineEnabled":
+    elif name == "localAuthorizeOfflineEnabled":
         ID = 74
         unit = ""
-    if name == "allowOfflineTxForUnknownId":
+    elif name == "allowOfflineTxForUnknownId":
         ID = 75
         unit = ""
-    if name == "maxChargerCurrent":
+    elif name == "maxChargerCurrent":
         ID = 76
         unit = ""
-    if name == "ledStripBrightness":
+    elif name == "ledStripBrightness":
         ID = 77
         unit = ""
-    if name == "chargingSchedule":
+    elif name == "chargingSchedule":
         ID = 78
         unit = ""
+    elif name == "eqAvailableCurrentP1":
+        ID = 79
+        unit = ""
+    elif name == "eqAvailableCurrentP2":
+        ID = 80
+        unit = ""
+    elif name == "eqAvailableCurrentP3":
+        ID = 81
+        unit = ""
+    elif name == "deratedCurrent":
+        ID = 82
+        unit = ""
+    elif name == "deratingActive":
+        ID = 83
+        unit = ""
+
+    else:
+        Domoticz.Error(str(name))
+        return
 
     if (ID in Devices):
         if (Devices[ID].sValue != sValue):
@@ -443,7 +459,7 @@ def UpdateDevice(name, nValue, sValue):
             Used = 0
         else:
             Used = 1
-        if ID == 14:
+        if ID == 14 or ID == 59:
             Domoticz.Device(Name=name, Unit=ID, TypeName="Text", Used=1).Create()
 
         else:
