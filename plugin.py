@@ -3,7 +3,7 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.27" author="flopp999" version="0.27" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.28" author="flopp999" version="0.28" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
         <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
@@ -470,16 +470,21 @@ def CheckInternet():
     WriteDebug("Entered CheckInternet")
     try:
         WriteDebug("Ping")
-        requests.get(url='https://api.easee.cloud/', timeout=2)
+        requests.get(url='https://api.ease.cloud/', timeout=2)
         WriteDebug("Internet is OK")
         return True
     except:
-        if _plugin.GetToken.Connected():
+        if _plugin.GetToken.Connected() or _plugin.GetToken.Connecting():
             _plugin.GetToken.Disconnect()
-        if _plugin.GetState.Connected():
+        if _plugin.GetState.Connected() or _plugin.GetState.Connecting():
             _plugin.GetState.Disconnect()
-        if _plugin.GetConfig.Connected():
+        if _plugin.GetConfig.Connected() or _plugin.GetConfig.Connecting():
             _plugin.GetConfig.Disconnect()
+        if _plugin.GetRefreshToken.Connected() or _plugin.GetRefreshToken.Connecting():
+            _plugin.GetRefreshToken.Disconnect()
+        if _plugin.GetCharger.Connected() or _plugin.GetCharger.Connecting():
+            _plugin.GetCharger.Disconnect()
+
         WriteDebug("Internet is not available")
         return False
 
