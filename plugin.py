@@ -3,7 +3,7 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.28" author="flopp999" version="0.28" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.29" author="flopp999" version="0.29" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
         <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
@@ -20,7 +20,7 @@
     </description>
     <params>
         <param field="Mode4" label="Phone Number" width="320px" required="true" default="+46123123123"/>
-        <param field="Mode2" label="Password" width="350px" required="true" default="Secret"/>
+        <param field="Mode2" label="Password" width="350px" password="true" required="true" default="Secret"/>
         <param field="Mode6" label="Debug to file (Easee.log)" width="70px">
             <options>
                 <option label="Yes" value="Yes" />
