@@ -76,7 +76,7 @@ class BasePlugin:
 
         if len(self.PhoneNumber) < 10:
             Domoticz.Log("Phone Number too short")
-            WriteDebug("Identifier too short")
+            WriteDebug("Phone number too short")
 
         if len(self.Password) < 4:
             Domoticz.Log("Password too short")
