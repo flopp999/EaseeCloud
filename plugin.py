@@ -476,7 +476,7 @@ def CheckInternet():
     WriteDebug("Entered CheckInternet")
     try:
         WriteDebug("Ping")
-        requests.get(url='https://api.ease.cloud/', timeout=2)
+        requests.get(url='https://api.easee.cloud/', timeout=2)
         WriteDebug("Internet is OK")
         return True
     except:
