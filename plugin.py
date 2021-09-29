@@ -3,9 +3,10 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.31" author="flopp999" version="0.31" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.32" author="flopp999" version="0.32" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
+        <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
         <h2>https://developer.easee.cloud/docs/get-started</h2>
         <h2>https://developer.easee.cloud/reference</h2>
         <h3>Categories that will be fetched</h3>
