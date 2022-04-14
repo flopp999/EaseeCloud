@@ -3,7 +3,7 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.32" author="flopp999" version="0.32" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.33" author="flopp999" version="0.33" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
         <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
@@ -62,7 +62,7 @@ class BasePlugin:
     def __init__(self):
         self.token = ''
         self.loop = 0
-        self.Count = 5
+        self.Count = 1
         return
 
     def onStart(self):
@@ -129,7 +129,6 @@ class BasePlugin:
 
     def onMessage(self, Connection, Data):
         Status = int(Data["Status"])
-
         if Status == 200:
 
             if Connection.Name == ("Get Token"):
@@ -178,14 +177,11 @@ class BasePlugin:
             WriteDebug("Status = "+str(Status))
             Domoticz.Error(str("Status "+str(Status)))
             Domoticz.Error(str(Data))
-            if _plugin.GetToken.Connected():
-                _plugin.GetToken.Disconnect()
-            if _plugin.GetState.Connected():
-                _plugin.GetState.Disconnect()
+            Disconnect()
 
     def onHeartbeat(self):
         self.Count += 1
-        if self.Count == 12:
+        if self.Count == 4:
             self.GetToken.Connect()
             self.Count = 0
 
@@ -479,6 +475,11 @@ def CheckInternet():
         WriteDebug("Internet is OK")
         return True
     except:
+        Disconnect()
+        WriteDebug("Internet is not available")
+        return False
+
+def Disconnect():
         if _plugin.GetToken.Connected() or _plugin.GetToken.Connecting():
             _plugin.GetToken.Disconnect()
         if _plugin.GetState.Connected() or _plugin.GetState.Connecting():
@@ -490,8 +491,6 @@ def CheckInternet():
         if _plugin.GetCharger.Connected() or _plugin.GetCharger.Connecting():
             _plugin.GetCharger.Disconnect()
 
-        WriteDebug("Internet is not available")
-        return False
 
 def WriteDebug(text):
     if Parameters["Mode6"] == "Yes":
