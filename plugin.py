@@ -3,9 +3,10 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.31" author="flopp999" version="0.31" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.33" author="flopp999" version="0.33" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
+        <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
         <h2>https://developer.easee.cloud/docs/get-started</h2>
         <h2>https://developer.easee.cloud/reference</h2>
         <h3>Categories that will be fetched</h3>
@@ -61,7 +62,7 @@ class BasePlugin:
     def __init__(self):
         self.token = ''
         self.loop = 0
-        self.Count = 5
+        self.Count = 1
         return
 
     def onStart(self):
@@ -103,7 +104,7 @@ class BasePlugin:
                 WriteDebug("Get Token")
                 data = "{\"userName\":\""+self.PhoneNumber+"\",\"password\":\""+self.Password+"\"}"
                 headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
-                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': data})
+                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/login', 'Headers': headers, 'Data': data})
 
             elif Connection.Name == ("Get Refresh Token"):
                 WriteDebug("Get Refresh Token")
@@ -128,7 +129,6 @@ class BasePlugin:
 
     def onMessage(self, Connection, Data):
         Status = int(Data["Status"])
-
         if Status == 200:
 
             if Connection.Name == ("Get Token"):
@@ -172,21 +172,30 @@ class BasePlugin:
 
         elif Status == 401:
             self.GetRefreshToken.Connect()
+            Disconnect()
 
         else:
             WriteDebug("Status = "+str(Status))
             Domoticz.Error(str("Status "+str(Status)))
             Domoticz.Error(str(Data))
-            if _plugin.GetToken.Connected():
-                _plugin.GetToken.Disconnect()
-            if _plugin.GetState.Connected():
-                _plugin.GetState.Disconnect()
+            Disconnect()
 
     def onHeartbeat(self):
+        Domoticz.Log(str(_plugin.GetToken.Connected()))
+        Domoticz.Log(str(_plugin.GetToken.Connecting()))
+        Domoticz.Log(str(_plugin.GetState.Connected()))
+        Domoticz.Log(str(_plugin.GetState.Connecting()))
+        Domoticz.Log(str(_plugin.GetConfig.Connected()))
+        Domoticz.Log(str(_plugin.GetConfig.Connecting()))
+        Domoticz.Log(str(_plugin.GetRefreshToken.Connected()))
+        Domoticz.Log(str(_plugin.GetRefreshToken.Connecting()))
+        Domoticz.Log(str(_plugin.GetCharger.Connected()))
+        Domoticz.Log(str(_plugin.GetCharger.Connecting()))
         self.Count += 1
-        if self.Count == 12:
-            self.GetToken.Connect()
-            self.Count = 0
+        if self.Count >= 4:
+            if not self.GetCharger.Connect() or not self.GetCharger.Connecting():
+                self.GetCharger.Connect()
+                self.Count = 0
 
 global _plugin
 _plugin = BasePlugin()
@@ -208,7 +217,7 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "totalPower":
         ID = 4
-        unit = ""
+        unit = "kW"
     elif name == "sessionEnergy":
         ID = 5
         unit = "kWh"
@@ -229,13 +238,13 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "dynamicCircuitCurrentP1":
         ID = 11
-        unit = ""
+        unit = "A"
     elif name == "dynamicCircuitCurrentP2":
         ID = 12
-        unit = ""
+        unit = "A"
     elif name == "dynamicCircuitCurrentP3":
         ID = 13
-        unit = ""
+        unit = "A"
     elif name == "latestPulse":
         ID = 14
         sValue = sValue.replace('Z', '')
@@ -259,19 +268,19 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "inCurrentT2":
         ID = 20
-        unit = ""
+        unit = "A"
     elif name == "inCurrentT3":
         ID = 21
-        unit = ""
+        unit = "A"
     elif name == "inCurrentT4":
         ID = 22
-        unit = ""
+        unit = "A"
     elif name == "inCurrentT5":
         ID = 23
         unit = ""
     elif name == "outputCurrent":
         ID = 24
-        unit = ""
+        unit = "A"
     elif name == "isOnline":
         ID = 25
         unit = ""
@@ -385,13 +394,13 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "circuitMaxCurrentP1":
         ID = 62
-        unit = ""
+        unit = "A"
     elif name == "circuitMaxCurrentP2":
         ID = 63
-        unit = ""
+        unit = "A"
     elif name == "circuitMaxCurrentP3":
         ID = 64
-        unit = ""
+        unit = "A"
     elif name == "enableIdleCurrent":
         ID = 65
         unit = ""
@@ -430,22 +439,22 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "ledStripBrightness":
         ID = 77
-        unit = ""
+        unit = "%"
     elif name == "chargingSchedule":
         ID = 78
         unit = ""
     elif name == "eqAvailableCurrentP1":
         ID = 79
-        unit = ""
+        unit = "A"
     elif name == "eqAvailableCurrentP2":
         ID = 80
-        unit = ""
+        unit = "A"
     elif name == "eqAvailableCurrentP3":
         ID = 81
-        unit = ""
+        unit = "A"
     elif name == "deratedCurrent":
         ID = 82
-        unit = ""
+        unit = "A"
     elif name == "deratingActive":
         ID = 83
         unit = ""
@@ -478,6 +487,11 @@ def CheckInternet():
         WriteDebug("Internet is OK")
         return True
     except:
+        Disconnect()
+        WriteDebug("Internet is not available")
+        return False
+
+def Disconnect():
         if _plugin.GetToken.Connected() or _plugin.GetToken.Connecting():
             _plugin.GetToken.Disconnect()
         if _plugin.GetState.Connected() or _plugin.GetState.Connecting():
@@ -489,8 +503,6 @@ def CheckInternet():
         if _plugin.GetCharger.Connected() or _plugin.GetCharger.Connecting():
             _plugin.GetCharger.Disconnect()
 
-        WriteDebug("Internet is not available")
-        return False
 
 def WriteDebug(text):
     if Parameters["Mode6"] == "Yes":
