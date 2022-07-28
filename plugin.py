@@ -104,7 +104,7 @@ class BasePlugin:
                 WriteDebug("Get Token")
                 data = "{\"userName\":\""+self.PhoneNumber+"\",\"password\":\""+self.Password+"\"}"
                 headers = { 'accept': 'application/json', 'Host': 'api.easee.cloud', 'Content-Type': 'application/*+json'}
-                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/token', 'Headers': headers, 'Data': data})
+                Connection.Send({'Verb':'POST', 'URL': '/api/accounts/login', 'Headers': headers, 'Data': data})
 
             elif Connection.Name == ("Get Refresh Token"):
                 WriteDebug("Get Refresh Token")
@@ -172,6 +172,7 @@ class BasePlugin:
 
         elif Status == 401:
             self.GetRefreshToken.Connect()
+            Disconnect()
 
         else:
             WriteDebug("Status = "+str(Status))
@@ -180,10 +181,21 @@ class BasePlugin:
             Disconnect()
 
     def onHeartbeat(self):
+        Domoticz.Log(str(_plugin.GetToken.Connected()))
+        Domoticz.Log(str(_plugin.GetToken.Connecting()))
+        Domoticz.Log(str(_plugin.GetState.Connected()))
+        Domoticz.Log(str(_plugin.GetState.Connecting()))
+        Domoticz.Log(str(_plugin.GetConfig.Connected()))
+        Domoticz.Log(str(_plugin.GetConfig.Connecting()))
+        Domoticz.Log(str(_plugin.GetRefreshToken.Connected()))
+        Domoticz.Log(str(_plugin.GetRefreshToken.Connecting()))
+        Domoticz.Log(str(_plugin.GetCharger.Connected()))
+        Domoticz.Log(str(_plugin.GetCharger.Connecting()))
         self.Count += 1
-        if self.Count == 4:
-            self.GetToken.Connect()
-            self.Count = 0
+        if self.Count >= 4:
+            if not self.GetCharger.Connect() or not self.GetCharger.Connecting():
+                self.GetCharger.Connect()
+                self.Count = 0
 
 global _plugin
 _plugin = BasePlugin()
@@ -205,7 +217,7 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "totalPower":
         ID = 4
-        unit = ""
+        unit = "kW"
     elif name == "sessionEnergy":
         ID = 5
         unit = "kWh"
@@ -226,13 +238,13 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "dynamicCircuitCurrentP1":
         ID = 11
-        unit = ""
+        unit = "A"
     elif name == "dynamicCircuitCurrentP2":
         ID = 12
-        unit = ""
+        unit = "A"
     elif name == "dynamicCircuitCurrentP3":
         ID = 13
-        unit = ""
+        unit = "A"
     elif name == "latestPulse":
         ID = 14
         sValue = sValue.replace('Z', '')
@@ -256,19 +268,19 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "inCurrentT2":
         ID = 20
-        unit = ""
+        unit = "A"
     elif name == "inCurrentT3":
         ID = 21
-        unit = ""
+        unit = "A"
     elif name == "inCurrentT4":
         ID = 22
-        unit = ""
+        unit = "A"
     elif name == "inCurrentT5":
         ID = 23
         unit = ""
     elif name == "outputCurrent":
         ID = 24
-        unit = ""
+        unit = "A"
     elif name == "isOnline":
         ID = 25
         unit = ""
@@ -382,13 +394,13 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "circuitMaxCurrentP1":
         ID = 62
-        unit = ""
+        unit = "A"
     elif name == "circuitMaxCurrentP2":
         ID = 63
-        unit = ""
+        unit = "A"
     elif name == "circuitMaxCurrentP3":
         ID = 64
-        unit = ""
+        unit = "A"
     elif name == "enableIdleCurrent":
         ID = 65
         unit = ""
@@ -427,22 +439,22 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
     elif name == "ledStripBrightness":
         ID = 77
-        unit = ""
+        unit = "%"
     elif name == "chargingSchedule":
         ID = 78
         unit = ""
     elif name == "eqAvailableCurrentP1":
         ID = 79
-        unit = ""
+        unit = "A"
     elif name == "eqAvailableCurrentP2":
         ID = 80
-        unit = ""
+        unit = "A"
     elif name == "eqAvailableCurrentP3":
         ID = 81
-        unit = ""
+        unit = "A"
     elif name == "deratedCurrent":
         ID = 82
-        unit = ""
+        unit = "A"
     elif name == "deratingActive":
         ID = 83
         unit = ""
