@@ -3,7 +3,7 @@
 # Author: flopp999
 #
 """
-<plugin key="EaseeCloud" name="Easee Cloud 0.33" author="flopp999" version="0.33" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
+<plugin key="EaseeCloud" name="Easee Cloud 0.34" author="flopp999" version="0.33" wikilink="https://github.com/flopp999/EaseeCloud-Domoticz" externallink="https://www.easee.com">
     <description>
         <h2>Support me with a coffee &<a href="https://www.buymeacoffee.com/flopp999">https://www.buymeacoffee.com/flopp999</a></h2><br/>
         <h2>or use my Tibber link &<a href="https://tibber.com/se/invite/8af85f51">https://tibber.com/se/invite/8af85f51</a></h2><br/>
@@ -176,21 +176,9 @@ class BasePlugin:
 
         else:
             WriteDebug("Status = "+str(Status))
-            Domoticz.Error(str("Status "+str(Status)))
-            Domoticz.Error(str(Data))
             Disconnect()
 
     def onHeartbeat(self):
-        Domoticz.Log(str(_plugin.GetToken.Connected()))
-        Domoticz.Log(str(_plugin.GetToken.Connecting()))
-        Domoticz.Log(str(_plugin.GetState.Connected()))
-        Domoticz.Log(str(_plugin.GetState.Connecting()))
-        Domoticz.Log(str(_plugin.GetConfig.Connected()))
-        Domoticz.Log(str(_plugin.GetConfig.Connecting()))
-        Domoticz.Log(str(_plugin.GetRefreshToken.Connected()))
-        Domoticz.Log(str(_plugin.GetRefreshToken.Connecting()))
-        Domoticz.Log(str(_plugin.GetCharger.Connected()))
-        Domoticz.Log(str(_plugin.GetCharger.Connecting()))
         self.Count += 1
         if self.Count >= 4:
             if not self.GetCharger.Connect() or not self.GetCharger.Connecting():
@@ -460,7 +448,6 @@ def UpdateDevice(name, nValue, sValue):
         unit = ""
 
     else:
-        Domoticz.Error(str(name))
         return
 
     if (ID in Devices):
